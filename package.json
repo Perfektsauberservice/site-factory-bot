@@ -1,0 +1,9 @@
+{
+  "name": "site-factory-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot care genereaza site-uri demo profesionale",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
+}
