@@ -180,7 +180,7 @@ export const handler = async (event) => {
 // ─── Recomanda agenti AI ──────────────────────────────────────────────────────
 
 async function recommendAgents(apiKey, businessType) {
-  const context = businessType ? `pentru un business de tip "${businessType}"` : `pentru un business local`;
+  const businessLabel = businessType || 'business local';
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -191,12 +191,24 @@ async function recommendAgents(apiKey, businessType) {
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 800,
+      max_tokens: 1200,
       messages: [{
         role: 'user',
-        content: `Recomanda 5-6 agenti AI specifici si practici ${context}.
-Fiecare agent: nume scurt, ce face concret, ce problema rezolva.
-Format Telegram Markdown, direct si concis. Max 600 cuvinte.`,
+        content: `Esti un consultant AI pentru afaceri mici. Clientul are un business de tip: "${businessLabel}".
+
+Recomanda 5-6 agenti AI care se potrivesc EXACT acestui tip de business.
+Pentru fiecare agent explica:
+1. Ce face concret (1 fraza)
+2. De ce se potriveste SPECIFIC acestui business (nu generic) — ce problema reala rezolva
+3. Ce rezultat concret aduce (ex: "reduce timpul de raspuns la programari cu 80%")
+
+Format Telegram Markdown:
+🤖 *Nume Agent*
+📌 _Ce face:_ ...
+✅ _De ce se potriveste:_ ...
+📈 _Rezultat:_ ...
+
+Fii specific si practic. Evita raspunsuri generice. Gandeste-te la problemele reale ale unui proprietar de ${businessLabel}.`,
       }],
     }),
   });
