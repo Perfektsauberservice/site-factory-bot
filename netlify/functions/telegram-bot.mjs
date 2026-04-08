@@ -92,6 +92,11 @@ export const handler = async (event) => {
     return { statusCode: 200, body: 'OK' };
   }
 
+  if (lower === '/lista' || lower === 'lista' || lower === '/list') {
+    await sendTelegram(botToken, chatId, buildBusinessList());
+    return { statusCode: 200, body: 'OK' };
+  }
+
   // ── Genereaza site ─────────────────────────────────────────────────────────
   await sendTelegram(botToken, chatId, `🧠 Analizez cererea ta...`);
 
@@ -192,6 +197,41 @@ export const handler = async (event) => {
   return { statusCode: 200, body: 'OK' };
 };
 
+// ─── Lista afaceri ────────────────────────────────────────────────────────────
+
+function buildBusinessList() {
+  return [
+    `📋 *Tipuri de afaceri suportate*`,
+    ``,
+    `✂ *Servicii personale*`,
+    `Frizerie, beauty salon, nail salon, tatuaje, masaj, spa`,
+    ``,
+    `🍕 *Food & Drink*`,
+    `Restaurant, café, bistro, pizzerie, brutarie, cofetarie, bar`,
+    ``,
+    `🏥 *Sanatate*`,
+    `Dentist, medic familie, psiholog, fizioterapie, optician, farmacie`,
+    ``,
+    `🚗 *Auto*`,
+    `Service auto, vulcanizare, detailing, spalatorie auto`,
+    ``,
+    `🏠 *Imobiliare & Constructii*`,
+    `Agentie imobiliara, constructor, renovari, instalatii`,
+    ``,
+    `💼 *Profesionisti*`,
+    `Avocat, contabil, notar, agentie marketing, web design`,
+    ``,
+    `💪 *Sport & Educatie*`,
+    `Sala fitness, yoga, dans, meditatii, gradinita`,
+    ``,
+    `🌿 *Altele*`,
+    `Hotel, pensiune, florarie, curatenie, catering, pet shop`,
+    ``,
+    `_Trimite orice cerere si generez site-ul in 2 minute!_`,
+    `Exemplu: _"fa un site pentru o florarie in Freiburg"_`,
+  ].join('\n');
+}
+
 // ─── Recomanda agenti AI ──────────────────────────────────────────────────────
 
 async function recommendAgents(apiKey, businessType) {
@@ -243,6 +283,9 @@ function buildHelpMessage() {
     `*Recomandari agenti AI:*`,
     `• _"ce agenti AI sunt utili pentru frizerie?"_`,
     `• _"ce automatizari recomanzi?"_`,
+    ``,
+    `*Alte comenzi:*`,
+    `• /lista — vezi toate tipurile de afaceri suportate`,
     ``,
     `Voi genera automat:`,
     `✅ Site demo Framer-style, profesional`,
