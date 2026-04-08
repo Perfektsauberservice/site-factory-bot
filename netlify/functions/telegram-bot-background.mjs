@@ -98,6 +98,26 @@ async function processMessage({ message, botToken, chatId, anthropicKey, githubP
     await sendTelegram(botToken, chatId, `❓ ${msg}`); return;
   }
 
+  if (interpreted.action === 'upgrade_to_full') {
+    await sendTelegram(botToken, chatId,
+      `🚀 *De la demo la site complet*\n\n` +
+      `⏱ *Timp de livrare: 3-5 zile lucratoare*\n\n` +
+      `✅ *Ce include site-ul full:*\n` +
+      `• Domeniu propriu (ex: frizeriadinGaggenau.de)\n` +
+      `• Design personalizat cu culorile si logo-ul tau\n` +
+      `• Texte profesionale scrise pentru businessul tau\n` +
+      `• Poze reale sau stock premium\n` +
+      `• Formular de contact functional\n` +
+      `• Google Maps integrat\n` +
+      `• SEO de baza (Google te gaseste)\n` +
+      `• Versiune mobila perfecta\n` +
+      `• Agenti AI specifici businessului tau\n` +
+      `• Hosting 1 an inclus\n\n` +
+      `📩 *Urmatorul pas:* Raspunde cu datele tale de contact si te sun eu pentru detalii.`
+    );
+    return;
+  }
+
   if (interpreted.action === 'improve_site') {
     await sendTelegram(botToken, chatId,
       `🎨 Trimite o cerere noua completa si generez o versiune cu design complet diferit.\n` +

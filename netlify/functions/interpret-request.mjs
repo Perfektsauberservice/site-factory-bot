@@ -9,7 +9,7 @@ export async function interpretRequest(apiKey, userMessage) {
   const systemPrompt = `Esti un asistent care interpreteaza cereri legate de site-uri web si agenti AI.
 Utilizatorul trimite o cerere in romana, germana sau engleza.
 
-Exista 3 tipuri de actiuni:
+Exista 4 tipuri de actiuni:
 
 1. GENERATE_SITE — utilizatorul vrea sa creeze un site nou
    Extrage: businessType (engleza snake_case), city (sau null daca nu e mentionat), businessName (sau null), lang (de/ro/en)
@@ -20,6 +20,9 @@ Exista 3 tipuri de actiuni:
    Exemple: "imbunatateste designul", "fa un design mai bun", "alt design"
 
 3. RECOMMEND_AGENTS — utilizatorul intreaba DOAR ce agenti AI ar fi utili (fara sa ceara site nou)
+
+4. UPGRADE_TO_FULL — utilizatorul intreaba despre trecerea de la demo la site real/complet, sau despre pret/timp/ce include un site full
+   Exemple: "cat costa site-ul full", "in cat timp faci site-ul complet", "vreau sa nu mai fie demo", "vreau site real", "cat dureaza", "ce include site-ul full"
    Extrage: businessType daca e mentionat (sau null)
    Exemple: "ce agenti ai sunt utili", "ce automatizari recomanzi"
 
@@ -28,6 +31,7 @@ Raspunde DOAR cu JSON valid, fara explicatii:
 {"action":"generate_site","businessType":"real_estate","city":null,"businessName":null,"lang":"de","includeAgents":true}
 {"action":"improve_site"}
 {"action":"recommend_agents","businessType":"barbershop"}
+{"action":"upgrade_to_full"}
 {"action":"unknown","clarification":"intrebare clara catre user"}
 
 Exemple complete:
@@ -36,7 +40,10 @@ Exemple complete:
 - "site pt dentist, include si agenti AI utili" → {"action":"generate_site","businessType":"dental_clinic","city":null,"businessName":null,"lang":"de","includeAgents":true}
 - "imbunatateste designul" → {"action":"improve_site"}
 - "ce agenti ai sunt utili pentru frizerie" → {"action":"recommend_agents","businessType":"barbershop"}
-- "vreau site pt restaurant La Roma in Karlsruhe" → {"action":"generate_site","businessType":"restaurant","city":"Karlsruhe","businessName":"La Roma","lang":"de","includeAgents":false}`;
+- "vreau site pt restaurant La Roma in Karlsruhe" → {"action":"generate_site","businessType":"restaurant","city":"Karlsruhe","businessName":"La Roma","lang":"de","includeAgents":false}
+- "in cat timp faci site-ul complet" → {"action":"upgrade_to_full"}
+- "vreau sa nu mai fie demo, vreau full site" → {"action":"upgrade_to_full"}
+- "cat costa site-ul real" → {"action":"upgrade_to_full"}`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
