@@ -37,12 +37,18 @@ Exemple:
     }),
   });
 
-  if (!res.ok) return null;
+  if (!res.ok) {
+    console.error('interpret-request API error:', res.status, await res.text());
+    return null;
+  }
   const data = await res.json();
   const raw = data.content?.[0]?.text?.trim();
 
+  // Curata markdown code blocks daca Claude le adauga
+  const cleaned = raw?.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+
   try {
-    return JSON.parse(raw);
+    return JSON.parse(cleaned);
   } catch {
     console.error('interpret-request: non-JSON:', raw);
     return null;
