@@ -140,7 +140,7 @@ export const handler = async (event) => {
 
     await sendTelegram(botToken, chatId, `📁 Site generat. Creez repo GitHub...`);
 
-    const repoSlug = `demo-${businessType.toLowerCase().replace(/\s+/g, '-')}-${city.toLowerCase().replace(/[\s+,]/g, '-')}-${Date.now()}`;
+    const repoSlug = `demo-${businessType.toLowerCase().replace(/[\s_]+/g, '-')}-${city.toLowerCase().replace(/[\s+,_]+/g, '-')}-${Date.now()}`;
     const repoUrl = await createGithubRepo(githubPat, repoSlug, `Demo: ${businessName || businessType} in ${city}`);
 
     if (!repoUrl) {
