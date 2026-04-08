@@ -1,26 +1,40 @@
 /**
  * Interpreteaza cererea utilizatorului cu Claude
  * Returneaza: { action, businessType, city, businessName, lang }
+ * Actions: generate_site | improve_site | recommend_agents | unknown
  */
 
 export async function interpretRequest(apiKey, userMessage) {
-  const systemPrompt = `Esti un asistent care interpreteaza cereri de creare site-uri web.
+  const systemPrompt = `Esti un asistent care interpreteaza cereri legate de site-uri web si agenti AI.
 Utilizatorul trimite o cerere in romana, germana sau engleza.
 
-Trebuie sa extragi:
-- tipul businessului (in engleza, snake_case: "barbershop", "restaurant", "dental_clinic", "beauty_salon", "auto_repair", "real_estate", "fitness_gym", "hotel", "bakery", "lawyer", etc.)
-- orasul (exact cum e scris)
-- numele businessului (daca e mentionat, altfel null)
-- limba site-ului (de obicei "de" pentru Germania, "ro" pentru Romania, "en" pentru engleza)
+Exista 3 tipuri de actiuni:
 
-Raspunde DOAR cu JSON valid:
-{"action": "generate_site", "businessType": "barbershop", "city": "Gaggenau", "businessName": null, "lang": "de"}
-{"action": "unknown", "clarification": "intrebare catre user"}
+1. GENERATE_SITE — utilizatorul vrea sa creeze un site nou
+   Extrage: businessType (engleza snake_case), city, businessName (sau null), lang (de/ro/en)
+   Exemple: "fa un site pentru o frizerie in Gaggenau", "vreau site restaurant Karlsruhe"
+
+2. IMPROVE_SITE — utilizatorul vrea sa imbunatateasca/redeseneze un site existent
+   Exemple: "imbunatateste designul", "fa un design mai bun", "redeseneaza site-ul", "alt design"
+
+3. RECOMMEND_AGENTS — utilizatorul intreaba ce agenti AI ar fi utili
+   Exemple: "ce agenti ai sunt utili", "ce automatizari recomanzi", "ce agenti pentru frizerie"
+   Extrage: businessType daca e mentionat (sau null daca nu)
+
+Raspunde DOAR cu JSON valid, fara explicatii:
+{"action":"generate_site","businessType":"barbershop","city":"Gaggenau","businessName":null,"lang":"de"}
+{"action":"improve_site"}
+{"action":"recommend_agents","businessType":"barbershop"}
+{"action":"unknown","clarification":"intrebare clara catre user"}
 
 Exemple:
 - "fa un site pentru o frizerie in Gaggenau" → {"action":"generate_site","businessType":"barbershop","city":"Gaggenau","businessName":null,"lang":"de"}
-- "vreau site pt restaurant La Roma in Karlsruhe" → {"action":"generate_site","businessType":"restaurant","city":"Karlsruhe","businessName":"La Roma","lang":"de"}
-- "site dentist Baden-Baden" → {"action":"generate_site","businessType":"dental_clinic","city":"Baden-Baden","businessName":null,"lang":"de"}`;
+- "imbunatateste designul" → {"action":"improve_site"}
+- "fa un design mai bun" → {"action":"improve_site"}
+- "redeseneaza" → {"action":"improve_site"}
+- "ce agenti ai sunt utili pentru aceasta frizerie" → {"action":"recommend_agents","businessType":"barbershop"}
+- "ce automatizari recomanzi" → {"action":"recommend_agents","businessType":null}
+- "vreau site pt restaurant La Roma in Karlsruhe" → {"action":"generate_site","businessType":"restaurant","city":"Karlsruhe","businessName":"La Roma","lang":"de"}`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',

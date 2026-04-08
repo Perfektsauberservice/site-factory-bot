@@ -103,6 +103,24 @@ export const handler = async (event) => {
     return { statusCode: 200, body: 'OK' };
   }
 
+  // ── Imbunatateste designul ─────────────────────────────────────────────────
+  if (interpreted.action === 'improve_site') {
+    await sendTelegram(botToken, chatId,
+      `🎨 *Redesenez site-ul cu un design Framer-style complet diferit...*\n\n` +
+      `Ce tip de business si in ce oras? De exemplu:\n_"imbunatateste designul pentru frizeria din Gaggenau"_\n\n` +
+      `Sau trimite o cerere noua completa si generez o versiune v2 cu alt layout si alta paleta de culori.`
+    );
+    return { statusCode: 200, body: 'OK' };
+  }
+
+  // ── Recomanda agenti AI ────────────────────────────────────────────────────
+  if (interpreted.action === 'recommend_agents') {
+    await sendTelegram(botToken, chatId, `🤖 Analizez ce agenti AI ar fi utili...`);
+    const agentsMsg = await recommendAgents(anthropicKey, interpreted.businessType);
+    await sendTelegram(botToken, chatId, agentsMsg);
+    return { statusCode: 200, body: 'OK' };
+  }
+
   if (interpreted.action === 'generate_site') {
     const { businessType, city, businessName, lang } = interpreted;
 
@@ -165,22 +183,61 @@ export const handler = async (event) => {
   return { statusCode: 200, body: 'OK' };
 };
 
+// ─── Recomanda agenti AI ──────────────────────────────────────────────────────
+
+async function recommendAgents(apiKey, businessType) {
+  const context = businessType
+    ? `pentru un business de tip "${businessType}"`
+    : `pentru un business local (frizerie, restaurant, dentist, etc.)`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 800,
+      messages: [{
+        role: 'user',
+        content: `Recomanda 5-6 agenti AI specifici si practici ${context}.
+Fiecare agent trebuie sa aiba: nume, ce face concret, ce problema rezolva.
+Format Telegram Markdown, fara cod, direct si concis. Max 600 cuvinte.
+Exemple de agenti: lead notifier, review requester, blog SEO, programari automate, raspuns recenzii, rapoarte saptamanale, etc.`,
+      }],
+    }),
+  });
+
+  if (!res.ok) return `❌ Nu am putut genera recomandari. Incearca din nou.`;
+  const data = await res.json();
+  return data.content?.[0]?.text || `❌ Raspuns gol de la Claude.`;
+}
+
 // ─── Help message ─────────────────────────────────────────────────────────────
 
 function buildHelpMessage() {
   return [
     `🤖 *Site Factory Bot*`,
     ``,
-    `Trimite-mi o cerere vocala sau scrisa, de exemplu:`,
+    `Trimite-mi o cerere vocala sau scrisa:`,
     ``,
+    `*Genereaza site nou:*`,
     `• _"fa un site pentru o frizerie in Gaggenau"_`,
     `• _"vreau un site pentru un restaurant in Karlsruhe"_`,
-    `• _"creeaza site pentru un dentist in Baden-Baden"_`,
+    ``,
+    `*Imbunatateste designul:*`,
+    `• _"imbunatateste designul"_`,
+    `• _"fa un design mai bun"_`,
+    ``,
+    `*Recomandari agenti AI:*`,
+    `• _"ce agenti AI sunt utili pentru frizerie?"_`,
+    `• _"ce automatizari recomanzi?"_`,
     ``,
     `Voi genera automat:`,
-    `✅ Site demo profesional in germana`,
-    `✅ Agenti SEO + social media specifici`,
-    `✅ Deploy live pe Netlify`,
+    `✅ Site demo Framer-style, profesional`,
+    `✅ Deploy live pe Netlify in 2 minute`,
     `✅ Link de prezentat clientului`,
   ].join('\n');
 }
