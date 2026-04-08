@@ -71,6 +71,125 @@ const BUSINESS_THEMES = {
 
 // ─── Generator principal ──────────────────────────────────────────────────────
 
+// ─── Stiluri de design disponibile ───────────────────────────────────────────
+
+const DESIGN_STYLES = ['framer', 'lovable', 'bold', 'linear', 'webflow', 'minimal'];
+
+function getDesignPrompt(style, theme, langName, businessName, businessType, city) {
+  const base = `Genereaza un site HTML complet in ${langName} pentru:
+Business: ${businessName} (${businessType})
+Oras: ${city}
+PALETA DE CULORI: ${theme.palette}
+MOOD: ${theme.mood}
+
+REGULA CRITICA: FARA opacity:0 initial, FARA IntersectionObserver. Toate elementele vizibile imediat.
+Formular contact cu data-netlify="true", campuri: Nume, Email, Telefon, Mesaj.
+Schema.org LocalBusiness in JSON-LD. Meta tags SEO complete.
+COMPLET RESPONSIVE (breakpoint 768px).
+Returneaza DOAR codul HTML complet, fara explicatii, fara markdown.`;
+
+  if (style === 'framer') {
+    return `${base}
+
+DESIGN FRAMER-STYLE:
+- Font: Inter de la Google Fonts (300,400,500,600,700,800)
+- Header: position fixed, backdrop-filter blur(20px), semi-transparent
+- Hero: min-height 100vh, background gradient dark cu culorile principale
+  Titlu: clamp(3.5rem,8vw,7rem), font-weight 800. 2 butoane CTA pill-shape.
+- Cards servicii: background rgba(255,255,255,0.04), border rgba(255,255,255,0.08), border-radius 20px, hover lift
+- Statistici: 3-4 numere mari. Testimoniale glassmorphism. Footer dark.
+- CSS @keyframes pentru animatii (nu JS).
+STRUCTURA: Header, Hero+statistici, Servicii cu preturi EUR, Despre noi, Testimoniale, Contact+form, Footer.`;
+  }
+
+  if (style === 'lovable') {
+    return `${base}
+
+DESIGN LOVABLE/TAILWIND-STYLE:
+- Foloseste Tailwind CSS CDN: <script src="https://cdn.tailwindcss.com"></script>
+- Font: Inter de la Google Fonts
+- Fundal: alb sau gri foarte deschis (#f8fafc). Text: slate-900.
+- Header: bg-white/80 backdrop-blur sticky top-0, shadow-sm, border-b border-slate-100
+- Hero: padding-top mare, titlu foarte mare (text-6xl md:text-8xl font-black), badge colorat, subtitlu slate-600, 2 butoane (primar bg accent rounded-xl, secundar outline)
+- Cards servicii: bg-white rounded-2xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition
+- Sectiune cu background colorat (bg-accent/10) pentru statistici
+- Testimoniale: cards albe cu avatar placeholder, stele, citat
+- Footer: bg-slate-900 text-white
+- FARA clase Tailwind cu culori hardcodate — foloseste accent color din paleta ca variabila CSS sau inline style
+STRUCTURA: Header, Hero, Servicii cu preturi EUR, Despre noi, Statistici, Testimoniale, Contact+form, Footer.`;
+  }
+
+  if (style === 'bold') {
+    return `${base}
+
+DESIGN BOLD/EDITORIAL-STYLE:
+- Font: titluri Playfair Display (700,900) + body Inter — ambele de la Google Fonts
+- Fundal: alb pur sau negru pur (in functie de mood). Contrast maxim.
+- Layout asimetric: hero cu text aliniat stanga, imagine/gradient dreapta
+- Titlu hero: font-size clamp(4rem,10vw,9rem), font-weight 900, line-height 0.95, poate fi taiat de marginea ecranului
+- Accent color folosit agresiv: background-uri solide pe sectiuni, bordere groase, underline decorativ
+- Cards: border groasa 2-3px solid accent, NO shadow, hover: background solid accent + text invers
+- Sectiune cu background full accent color (contrasting)
+- Tipografie ca element de design: litere mari, tracking-wide, quote-uri mari
+- Footer: full color accent sau full black
+STRUCTURA: Header minimal, Hero editorial, Servicii cu preturi EUR, Citat/testimonial mare, Despre noi, Contact+form, Footer.`;
+  }
+
+  if (style === 'linear') {
+    return `${base}
+
+DESIGN LINEAR/STRIPE-STYLE (high-end SaaS):
+- Font: Inter de la Google Fonts (400,500,600,700)
+- Fundal: #0a0a0a (aproape negru) sau alb pur, in functie de mood
+- Header: transparent, devine frosted glass la scroll (backdrop-blur + bg semi-transparent)
+- Hero: centrat, titlu mediu (clamp(2.5rem,5vw,5rem)) dar cu gradient text spectaculos pe cuvantul cheie (background: linear-gradient → -webkit-background-clip: text → -webkit-text-fill-color: transparent)
+  Badge mic cu border gradient deasupra titlului. 1 buton CTA principal + 1 link secundar.
+- Cards servicii: bg #111 border border-white/10 rounded-xl p-6, hover: border-white/30 + subtle glow box-shadow cu accent color
+- Gradient mesh background subtil pe hero (culori soft, nu agresiv)
+- Sectiune "features" cu icoane SVG simple si text scurt — grid 3 coloane
+- Testimoniale: simple quote-uri cu avatar si nume, fara card elaborat
+- Footer: minimal, 1-2 linii
+STRUCTURA: Header, Hero cu gradient text, Features/Servicii, Statistici, Testimoniale minimal, Contact+form, Footer minimal.`;
+  }
+
+  if (style === 'webflow') {
+    return `${base}
+
+DESIGN WEBFLOW/AGENCY-STYLE:
+- Font: titluri Syne sau DM Sans (import Google Fonts) + body Inter
+- Layout: asimetric, grid CSS cu coloane neegale
+- Hero: split layout — stanga text (60%), dreapta element decorativ (gradient blob sau grid pattern CSS)
+  Titlu: font-weight 800, text mare, cu un cuvant evidentiat cu culoare accent
+- Header: linie subtire jos, background alb/dark, nav cu hover underline animat
+- Cards servicii: layout masonry sau grid neuniform, numere mari (01, 02, 03) ca decoratii
+- Culori: combina dark si light sections alternand — sectiune alba, sectiune colorata accent, sectiune neagra
+- Detalii: border-radius mic (8px max) pe butoane — look mai serios/agency
+- Testimoniale: quote mare cu ghilimele decorative gigant ca fundal
+- Footer: dark cu grid de links si newsletter form
+STRUCTURA: Header, Hero split, Servicii numerotate cu preturi EUR, Sectiune colorata despre noi, Testimoniale cu quote mare, Contact+form, Footer dark.`;
+  }
+
+  if (style === 'minimal') {
+    return `${base}
+
+DESIGN MINIMAL/SWISS-STYLE (tipografie ca design):
+- Font: un singur font — DM Serif Display pentru titluri + DM Sans pentru body (Google Fonts)
+- Fundal: alb pur #ffffff. Text: #111111. Accent color folosit cu parcimonie.
+- FARA gradiente, FARA shadows (maxim shadow-sm pe cards), FARA efecte vizuale complexe
+- Header: alb, border-bottom 1px solid #eee, logo text simplu, nav minimal
+- Hero: padding 160px sus/jos, titlu ENORM (clamp(5rem,12vw,10rem)) aliniat stanga, font-weight 400 (nu bold — eleganta), 1 singura linie subtitlu, 1 buton CTA simplu cu border
+- Spatiu alb: sectiunile au padding minim 120px sus/jos
+- Grid servicii: tabel-like sau lista cu separator lines, nu carduri — tip "editorial list"
+- Sectiune statistics: numere mari izolate cu mult spatiu alb in jurul lor
+- Testimoniale: citat italic mare, linie separator, nume mic
+- Accent color: folosit DOAR pe butonul principal si 1-2 elemente cheie
+- Footer: 1 linie, centrat, minimal
+STRUCTURA: Header, Hero mare minimal, Servicii ca lista eleganta cu preturi EUR, Statistici cu spatiu, Testimoniale citat, Contact+form minimal, Footer 1 linie.`;
+  }
+
+  return base;
+}
+
 async function generateWithClaude(apiKey, { businessType, city, businessName, lang = 'de' }) {
   const theme = BUSINESS_THEMES[businessType] || {
     palette: '#0f172a, #1e293b, accent #6366f1 (indigo)',
@@ -78,6 +197,10 @@ async function generateWithClaude(apiKey, { businessType, city, businessName, la
   };
 
   const langName = lang === 'de' ? 'germana' : lang === 'ro' ? 'romana' : 'engleza';
+
+  // Alege un stil random la fiecare generare
+  const style = DESIGN_STYLES[Math.floor(Math.random() * DESIGN_STYLES.length)];
+  console.log(`Design style ales: ${style}`);
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -91,44 +214,7 @@ async function generateWithClaude(apiKey, { businessType, city, businessName, la
       max_tokens: 16000,
       messages: [{
         role: 'user',
-        content: `Genereaza un site HTML complet in ${langName} pentru:
-Business: ${businessName} (${businessType})
-Oras: ${city}
-
-PALETA DE CULORI: ${theme.palette}
-MOOD / ATMOSFERA: ${theme.mood}
-
-DESIGN FRAMER-STYLE (respecta strict):
-- Font: Inter de la Google Fonts (300, 400, 500, 600, 700, 800)
-- Culori: foloseste EXACT paleta specificata mai sus
-- Header: position fixed, backdrop-filter blur(20px), border-bottom 1px solid rgba(255,255,255,0.08)
-- Hero: min-height 100vh, background gradient cu culorile principale, text centrat
-  Titlu: font-size clamp(3.5rem,8vw,7rem), font-weight 800, line-height 1.05
-  Subtitlu: font-size 1.2rem, opacity 0.7, max-width 560px margin auto
-  2 butoane: primar solid accent color, secundar outline
-- Animatii: FARA IntersectionObserver si FARA opacity:0 initial pe elemente. Foloseste DOAR CSS @keyframes cu animation pe sectiuni/carduri. Toate elementele TREBUIE sa fie vizibile imediat la incarcare.
-- Cards servicii: background rgba(255,255,255,0.04), border 1px solid rgba(255,255,255,0.08), border-radius 20px, hover: translateY(-6px) + border-color accent
-- Sectiunea statistici: 3-4 numere mari cu label (clienti, ani, rating etc.)
-- Testimoniale: 3 carduri glassmorphism
-- Formular contact cu data-netlify="true", campuri: Nume, Email, Telefon, Mesaj
-- Footer: dark, cu links si copyright
-- COMPLET RESPONSIVE (breakpoint 768px, hamburger menu pe mobile)
-
-STRUCTURA IN ${langName.toUpperCase()}:
-1. Header + nav
-2. Hero cu gradient + statistici
-3. Servicii (grid, min 4 cu preturi realiste in EUR)
-4. Despre noi
-5. Testimoniale
-6. Contact + formular Netlify
-7. Footer
-
-SEO:
-- <title> si <meta description> optimizate
-- Schema.org LocalBusiness in JSON-LD
-- Open Graph tags
-
-Returneaza DOAR codul HTML complet (<!DOCTYPE html>...</html>), fara explicatii, fara markdown.`,
+        content: getDesignPrompt(style, theme, langName, businessName, businessType, city),
       }],
     }),
   });
