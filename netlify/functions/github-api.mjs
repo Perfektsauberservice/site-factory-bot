@@ -59,7 +59,7 @@ export async function pushFilesToRepo(pat, repoFullName, files) {
 
   // Push fiecare fisier
   for (const [filePath, content] of Object.entries(files)) {
-    const encoded = btoa(unescape(encodeURIComponent(content)));
+    const encoded = Buffer.from(content, 'utf8').toString('base64');
 
     // Verifica daca fisierul exista deja (pentru SHA)
     let existingSha = null;
@@ -96,7 +96,7 @@ export async function pushFilesToRepo(pat, repoFullName, files) {
 
     if (!pushRes.ok) {
       console.error(`pushFilesToRepo: eroare la ${filePath}:`, await pushRes.text());
-      return false;
+      // continua cu urmatorul fisier in loc sa opreasca tot
     }
   }
 
