@@ -17,7 +17,7 @@ import { transcribeVoice } from './transcribe-voice.mjs';
 import { interpretRequest } from './interpret-request.mjs';
 import { generateSite } from './generate-site.mjs';
 import { createGithubRepo, pushFilesToRepo } from './github-api.mjs';
-import { createNetlifySite, triggerDeploy } from './netlify-api.mjs';
+import { deployToNetlify } from './netlify-api.mjs';
 
 // ─── Telegram helpers ────────────────────────────────────────────────────────
 
@@ -49,7 +49,6 @@ export const handler = async (event) => {
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   const githubPat = process.env.GITHUB_PAT;
   const netlifyPat = process.env.NETLIFY_PAT;
-  const netlifyAccount = process.env.NETLIFY_ACCOUNT_SLUG;
 
   let update;
   try {
@@ -144,12 +143,12 @@ export const handler = async (event) => {
 
     await sendTelegram(botToken, chatId, `📤 Fisiere in GitHub. Deployez pe Netlify...`);
 
-    // 4. Creeaza site Netlify + deploy
-    const netlifyUrl = await createNetlifySite(netlifyPat, netlifyAccount, repoSlug, githubPat);
+    // 4. Deploy direct pe Netlify
+    const netlifyUrl = await deployToNetlify(netlifyPat, repoSlug, siteFiles);
 
     if (!netlifyUrl) {
       await sendTelegram(botToken, chatId,
-        `⚠️ GitHub repo creat dar Netlify deploy a esuat.\n\nRepo: https://github.com/${repoSlug}\n\nPoti face deploy manual pe netlify.com`
+        `⚠️ GitHub repo creat dar Netlify deploy a esuat.\n\nRepo: ${repoUrl}\n\nPoti face deploy manual pe netlify.com`
       );
       return { statusCode: 200, body: 'OK' };
     }
@@ -158,7 +157,7 @@ export const handler = async (event) => {
     await sendTelegram(botToken, chatId,
       `🎉 *Site demo gata!*\n\n` +
       `🔗 *URL:* ${netlifyUrl}\n` +
-      `📦 *GitHub:* https://github.com/${repoSlug}\n\n` +
+      `📦 *GitHub:* https://github.com/${repoUrl}\n\n` +
       `_Poti prezenta acest link clientului. Dupa confirmare, personalizam si mutam pe domeniu propriu._`
     );
   }

@@ -1,58 +1,20 @@
 /**
- * Netlify API helpers
- * - createNetlifySite: creeaza un site Netlify conectat la un repo GitHub
- * Returneaza URL-ul live al site-ului
+ * Netlify API — deploy direct cu fisiere (fara GitHub link)
+ * Foloseste Netlify File Digest Deploy API
  */
+
+import { createHash } from 'crypto';
 
 const NETLIFY_API = 'https://api.netlify.com/api/v1';
 
-export async function createNetlifySite(netlifyPat, accountSlug, repoFullName, githubPat) {
-  if (!netlifyPat || !accountSlug) {
-    console.error('netlify-api: NETLIFY_PAT sau NETLIFY_ACCOUNT_SLUG lipsa');
+export async function deployToNetlify(netlifyPat, siteName, files) {
+  if (!netlifyPat) {
+    console.error('netlify-api: NETLIFY_PAT lipsa');
     return null;
   }
 
-  // Obtine installation ID GitHub pentru Netlify (necesar pentru linking)
-  // Mai simplu: cream site fara GitHub link si uploadam fisierele direct via Netlify API
-
-  // Varianta simplificata: creeaza site gol, returneaza URL si lasam GitHub Pages ca fallback
-  const siteName = repoFullName.split('/').pop(); // doar numele repo-ului
-
-  const res = await fetch(`${NETLIFY_API}/sites`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${netlifyPat}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      name: siteName,
-      account_slug: accountSlug,
-      repo: {
-        provider: 'github',
-        repo: repoFullName,
-        branch: 'main',
-        deploy_key_id: null,
-        cmd: '',
-        dir: '.',
-      },
-    }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    console.error('createNetlifySite error:', errText);
-
-    // Fallback: incearca fara repo linking (manual deploy)
-    return await createNetlifySiteManual(netlifyPat, siteName);
-  }
-
-  const data = await res.json();
-  return data.ssl_url || data.url || null;
-}
-
-async function createNetlifySiteManual(netlifyPat, siteName) {
-  // Creeaza site gol — va fi populat prin GitHub Pages sau manual deploy
-  const res = await fetch(`${NETLIFY_API}/sites`, {
+  // 1. Creeaza site nou
+  const siteRes = await fetch(`${NETLIFY_API}/sites`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${netlifyPat}`,
@@ -61,23 +23,64 @@ async function createNetlifySiteManual(netlifyPat, siteName) {
     body: JSON.stringify({ name: siteName }),
   });
 
-  if (!res.ok) {
-    console.error('createNetlifySiteManual error:', await res.text());
+  if (!siteRes.ok) {
+    console.error('deployToNetlify createSite error:', await siteRes.text());
     return null;
   }
 
-  const data = await res.json();
-  return data.ssl_url || data.url || null;
-}
+  const site = await siteRes.json();
+  const siteId = site.id;
+  const siteUrl = site.ssl_url || site.url;
 
-export async function triggerDeploy(netlifyPat, siteId) {
-  const res = await fetch(`${NETLIFY_API}/sites/${siteId}/builds`, {
+  // 2. Calculeaza SHA1 hash pentru fiecare fisier
+  const fileHashes = {};
+  for (const [filePath, content] of Object.entries(files)) {
+    const hash = createHash('sha1').update(content, 'utf8').digest('hex');
+    fileHashes[`/${filePath}`] = hash;
+  }
+
+  // 3. Porneste deploy-ul cu lista de fisiere
+  const deployRes = await fetch(`${NETLIFY_API}/sites/${siteId}/deploys`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${netlifyPat}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({}),
+    body: JSON.stringify({ files: fileHashes }),
   });
-  return res.ok;
+
+  if (!deployRes.ok) {
+    console.error('deployToNetlify startDeploy error:', await deployRes.text());
+    return siteUrl; // site creat, dar deploy esuat
+  }
+
+  const deploy = await deployRes.json();
+  const required = deploy.required || [];
+
+  // Mapa hash → cale fisier (fara slash initial)
+  const hashToPath = {};
+  for (const [fullPath, hash] of Object.entries(fileHashes)) {
+    if (!hashToPath[hash]) hashToPath[hash] = fullPath.slice(1);
+  }
+
+  // 4. Uploadeaza fisierele cerute de Netlify
+  for (const hash of required) {
+    const filePath = hashToPath[hash];
+    if (!filePath || !files[filePath]) continue;
+
+    const uploadRes = await fetch(`${NETLIFY_API}/deploys/${deploy.id}/files/${filePath}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${netlifyPat}`,
+        'Content-Type': 'application/octet-stream',
+      },
+      body: files[filePath],
+    });
+
+    if (!uploadRes.ok) {
+      console.error(`deployToNetlify upload error (${filePath}):`, await uploadRes.text());
+    }
+  }
+
+  return siteUrl;
 }
