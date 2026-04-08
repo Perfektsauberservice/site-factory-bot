@@ -122,14 +122,16 @@ export const handler = async (event) => {
   }
 
   if (interpreted.action === 'generate_site') {
-    const { businessType, city, businessName, lang } = interpreted;
+    const { businessType, city: rawCity, businessName, lang, includeAgents } = interpreted;
+    const city = rawCity || 'Deutschland';
 
     await sendTelegram(botToken, chatId,
       `✅ Am inteles!\n\n` +
       `🏪 *Tip:* ${businessType}\n` +
       `📍 *Oras:* ${city}\n` +
-      `🌐 *Limba:* ${lang || 'germana'}\n\n` +
-      `⏳ Generez site-ul demo... (1-2 minute)`
+      `🌐 *Limba:* ${lang || 'germana'}\n` +
+      (includeAgents ? `🤖 *Includ si agenti AI*\n` : ``) +
+      `\n⏳ Generez site-ul demo... (1-2 minute)`
     );
 
     // 1. Genereaza fisierele site-ului
@@ -178,6 +180,13 @@ export const handler = async (event) => {
       `📦 *GitHub:* https://github.com/${repoUrl}\n\n` +
       `_Poti prezenta acest link clientului. Dupa confirmare, personalizam si mutam pe domeniu propriu._`
     );
+
+    // 6. Daca s-au cerut si agenti AI, trimite recomandari
+    if (includeAgents) {
+      await sendTelegram(botToken, chatId, `🤖 Generez recomandari de agenti AI pentru ${businessType}...`);
+      const agentsMsg = await recommendAgents(anthropicKey, businessType);
+      await sendTelegram(botToken, chatId, agentsMsg);
+    }
   }
 
   return { statusCode: 200, body: 'OK' };

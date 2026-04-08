@@ -1,7 +1,8 @@
 /**
  * Interpreteaza cererea utilizatorului cu Claude
- * Returneaza: { action, businessType, city, businessName, lang }
  * Actions: generate_site | improve_site | recommend_agents | unknown
+ * city poate fi null daca nu e mentionat
+ * includeAgents=true daca userul cere si agenti in aceeasi cerere
  */
 
 export async function interpretRequest(apiKey, userMessage) {
@@ -11,30 +12,31 @@ Utilizatorul trimite o cerere in romana, germana sau engleza.
 Exista 3 tipuri de actiuni:
 
 1. GENERATE_SITE — utilizatorul vrea sa creeze un site nou
-   Extrage: businessType (engleza snake_case), city, businessName (sau null), lang (de/ro/en)
-   Exemple: "fa un site pentru o frizerie in Gaggenau", "vreau site restaurant Karlsruhe"
+   Extrage: businessType (engleza snake_case), city (sau null daca nu e mentionat), businessName (sau null), lang (de/ro/en)
+   Daca cererea include si agenti AI, pune includeAgents: true
+   Exemple: "fa un site pentru o frizerie in Gaggenau", "fa un site pentru agentie imobiliara"
 
 2. IMPROVE_SITE — utilizatorul vrea sa imbunatateasca/redeseneze un site existent
-   Exemple: "imbunatateste designul", "fa un design mai bun", "redeseneaza site-ul", "alt design"
+   Exemple: "imbunatateste designul", "fa un design mai bun", "alt design"
 
-3. RECOMMEND_AGENTS — utilizatorul intreaba ce agenti AI ar fi utili
-   Exemple: "ce agenti ai sunt utili", "ce automatizari recomanzi", "ce agenti pentru frizerie"
-   Extrage: businessType daca e mentionat (sau null daca nu)
+3. RECOMMEND_AGENTS — utilizatorul intreaba DOAR ce agenti AI ar fi utili (fara sa ceara site nou)
+   Extrage: businessType daca e mentionat (sau null)
+   Exemple: "ce agenti ai sunt utili", "ce automatizari recomanzi"
 
 Raspunde DOAR cu JSON valid, fara explicatii:
-{"action":"generate_site","businessType":"barbershop","city":"Gaggenau","businessName":null,"lang":"de"}
+{"action":"generate_site","businessType":"barbershop","city":"Gaggenau","businessName":null,"lang":"de","includeAgents":false}
+{"action":"generate_site","businessType":"real_estate","city":null,"businessName":null,"lang":"de","includeAgents":true}
 {"action":"improve_site"}
 {"action":"recommend_agents","businessType":"barbershop"}
 {"action":"unknown","clarification":"intrebare clara catre user"}
 
-Exemple:
-- "fa un site pentru o frizerie in Gaggenau" → {"action":"generate_site","businessType":"barbershop","city":"Gaggenau","businessName":null,"lang":"de"}
+Exemple complete:
+- "fa un site pentru o frizerie in Gaggenau" → {"action":"generate_site","businessType":"barbershop","city":"Gaggenau","businessName":null,"lang":"de","includeAgents":false}
+- "fa un site demo pentru o agentie imobiliara, integreaza si agentii AI" → {"action":"generate_site","businessType":"real_estate","city":null,"businessName":null,"lang":"de","includeAgents":true}
+- "site pt dentist, include si agenti AI utili" → {"action":"generate_site","businessType":"dental_clinic","city":null,"businessName":null,"lang":"de","includeAgents":true}
 - "imbunatateste designul" → {"action":"improve_site"}
-- "fa un design mai bun" → {"action":"improve_site"}
-- "redeseneaza" → {"action":"improve_site"}
-- "ce agenti ai sunt utili pentru aceasta frizerie" → {"action":"recommend_agents","businessType":"barbershop"}
-- "ce automatizari recomanzi" → {"action":"recommend_agents","businessType":null}
-- "vreau site pt restaurant La Roma in Karlsruhe" → {"action":"generate_site","businessType":"restaurant","city":"Karlsruhe","businessName":"La Roma","lang":"de"}`;
+- "ce agenti ai sunt utili pentru frizerie" → {"action":"recommend_agents","businessType":"barbershop"}
+- "vreau site pt restaurant La Roma in Karlsruhe" → {"action":"generate_site","businessType":"restaurant","city":"Karlsruhe","businessName":"La Roma","lang":"de","includeAgents":false}`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -58,7 +60,6 @@ Exemple:
   const data = await res.json();
   const raw = data.content?.[0]?.text?.trim();
 
-  // Curata markdown code blocks daca Claude le adauga
   const cleaned = raw?.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
 
   try {
