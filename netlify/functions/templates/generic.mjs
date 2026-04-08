@@ -106,7 +106,7 @@ DESIGN FRAMER-STYLE (respecta strict):
   Titlu: font-size clamp(3.5rem,8vw,7rem), font-weight 800, line-height 1.05
   Subtitlu: font-size 1.2rem, opacity 0.7, max-width 560px margin auto
   2 butoane: primar solid accent color, secundar outline
-- Animatii: fade-up la scroll cu IntersectionObserver (adauga class "visible" pe elemente cu class "animate-on-scroll")
+- Animatii: FARA IntersectionObserver si FARA opacity:0 initial pe elemente. Foloseste DOAR CSS @keyframes cu animation pe sectiuni/carduri. Toate elementele TREBUIE sa fie vizibile imediat la incarcare.
 - Cards servicii: background rgba(255,255,255,0.04), border 1px solid rgba(255,255,255,0.08), border-radius 20px, hover: translateY(-6px) + border-color accent
 - Sectiunea statistici: 3-4 numere mari cu label (clienti, ani, rating etc.)
 - Testimoniale: 3 carduri glassmorphism
